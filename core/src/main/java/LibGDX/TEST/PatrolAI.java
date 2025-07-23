@@ -1,89 +1,121 @@
 package LibGDX.TEST;
 
+import LibGDX.TEST.abstractClass.PhysicsObject;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Array;
 
-public class PatrolAI {
-    private Texture frame1;
-    private Texture frame2;
-    private float x, y;
-    private float direction = 1;
-    private float speed = 50f;
-    private float patrolRange = 100f;
-    private float startX;
-    private Rectangle bounds;
-
+public class PatrolAI extends PhysicsObject {
+    private Texture frame1, frame2;
+    private boolean showFrame1 = true;
     private float animationTimer = 0f;
     private final float frameDuration = 0.25f;
-    private boolean showFrame1 = true;
+    private boolean movingLeft = true;
+    private final float gravity = -1000f;
+    private float detectionRange = 100f;
+    private boolean isNearPlayer = false;
 
-    // 바닥 Y 좌표
-    private float groundY;
+    private BitmapFont font;
 
-    public PatrolAI(String frame1Path, String frame2Path, float x, float y) {
-        this.frame1 = new Texture(frame1Path);
-        this.frame2 = new Texture(frame2Path);
-        this.x = x; // 사용자 지정 x 좌표
-        this.y = y; // 사용자 지정 y 좌표
-        this.startX = x;
-        this.groundY = y;
-        this.bounds = new Rectangle(x, y, frame1.getWidth(), frame1.getHeight());
+    public PatrolAI(float x, float y) {
+        super(x, y);
+        frame1 = new Texture(Gdx.files.internal("resources/chatgpt_character_walking_0001.png"));
+        frame2 = new Texture(Gdx.files.internal("resources/chatgpt_character_walking_0002.png"));
+        this.width = frame1.getWidth();
+        this.height = frame1.getHeight();
+        this.hitbox.setSize(width, height);
+        velocity.x = -moveSpeed;
+
+        font = new BitmapFont(); // 기본 폰트
     }
 
-    public void update(float delta, java.util.List<Rectangle> walls) {
-        // 이동
-        x += direction * speed * delta;
+    public void update(float delta, Array<Rectangle> walls, float playerX, float playerY) {
+        // 플레이어와 거리 계산
+        float dx = playerX - position.x;
+        float dy = playerY - position.y;
+        float distance = (float) Math.sqrt(dx * dx + dy * dy);
+        isNearPlayer = distance < detectionRange;
 
-        // 좌우 배회
-        if (x > startX + patrolRange) {
-            direction = -1;
-        } else if (x < startX - patrolRange) {
-            direction = 1;
-        }
+        // 플레이어 가까우면 멈춤, 아니면 이동
+        velocity.x = isNearPlayer ? 0 : (movingLeft ? -moveSpeed : moveSpeed);
 
-        // 벽과 충돌 감지
+        // 수평 이동 시도
+        position.x += velocity.x * delta;
+        hitbox.setPosition(position.x, position.y);
+
+        // 수평 충돌 검사 및 처리
+        boolean collided = false;
         for (Rectangle wall : walls) {
-            if (bounds.overlaps(wall)) {
-                // 벽에 부딪히면 반대 방향으로 이동
-                direction = -direction;
-                // 벽과 충돌하면 AI의 위치를 벽과 충돌하지 않게 수정
-                if (direction < 0) {
-                    x = wall.x - bounds.width;// 벽 끝으로 밀기
-                } else {
-                    x = wall.x + wall.width;// 벽 끝으로 밀기
-                }
+            if (hitbox.overlaps(wall)) {
+                collided = true;
                 break;
             }
         }
 
-        // 애니메이션 타이머
-        animationTimer += delta;
-        if (animationTimer >= frameDuration) {
-            animationTimer -= frameDuration;
-            showFrame1 = !showFrame1;
+        if (collided) {
+            position.x -= velocity.x * delta; // 되돌리기
+            hitbox.setPosition(position.x, position.y);
+            movingLeft = !movingLeft;
+            velocity.x = movingLeft ? -moveSpeed : moveSpeed;
         }
 
-        bounds.setPosition(x, y);
+        // 중력 및 수직 이동
+        velocity.y += gravity * delta;
+        position.y += velocity.y * delta;
+        hitbox.setPosition(position.x, position.y);
+
+        // 수직 충돌 검사 및 처리
+        for (Rectangle wall : walls) {
+            if (hitbox.overlaps(wall)) {
+                if (velocity.y < 0) {
+                    position.y = wall.y + wall.height;
+                    velocity.y = 0;
+                } else if (velocity.y > 0) {
+                    position.y = wall.y - height;
+                    velocity.y = 0;
+                }
+                hitbox.setPosition(position.x, position.y);
+            }
+        }
+
+        // 애니메이션 타이머 - 근처면 애니메이션 멈춤
+        if (!isNearPlayer) {
+            animationTimer += delta;
+            if (animationTimer >= frameDuration) {
+                animationTimer -= frameDuration;
+                showFrame1 = !showFrame1;
+            }
+        } else {
+            animationTimer = 0f;
+            showFrame1 = true;
+        }
     }
 
     public void render(SpriteBatch batch) {
-        Texture currentFrame = showFrame1 ? frame1 : frame2;
-
-        // 방향에 따라 좌우 반전
-        if (direction < 0) {
-            batch.draw(currentFrame, x, y);
+        Texture frame = showFrame1 ? frame1 : frame2;
+        if (movingLeft) {
+            batch.draw(frame, position.x, position.y);
         } else {
-            batch.draw(currentFrame, x + currentFrame.getWidth(), y, -currentFrame.getWidth(), currentFrame.getHeight());
+            batch.draw(frame, position.x + width, position.y, -width, height);
+        }
+
+        // 플레이어 근처라서 멈춰있으면 'F' 문자 출력
+        if (isNearPlayer) {
+            font.draw(batch, "F", position.x + width / 2f, position.y + height + 20);
         }
     }
+
+    public boolean isStopped() {
+        return velocity.x == 0 && velocity.y == 0;
+    }
+
 
     public void dispose() {
         frame1.dispose();
         frame2.dispose();
-    }
-
-    public Rectangle getBounds() {
-        return bounds;
+        font.dispose();
     }
 }

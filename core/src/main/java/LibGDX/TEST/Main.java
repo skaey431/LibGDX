@@ -1,204 +1,97 @@
+// Main.java (일부 수정)
 package LibGDX.TEST;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.badlogic.gdx.utils.Array;
 
 public class Main extends ApplicationAdapter {
-    private SpriteBatch batch;
+    SpriteBatch batch;
+    Player player;
+    PatrolAI ai;
+    Array<Rectangle> walls;
+    TestPopup popup;
 
-    private Texture frame1;
-    private Texture frame2;
-    private Texture brickTexture;
-    private TextureRegion brickRegion;
-
-    private float x = 100, y = 300;
-    private float velocityY = 0f;
-    private final float speed = 100f;
-    private final float gravity = -600f;
-    private final float jumpPower = 400f;
-    private boolean onGround = false;
-
-    private Rectangle playerRect;
-    private List<Rectangle> walls;
-
-    private float animationTimer = 0f;
-    private final float frameDuration = 0.25f;
-    private boolean showFrame1 = true;
-    private boolean lookingLeft = false;
-
-    private float stageLeftBound = 0f;
-    private float stageRightBound = 800f;
-    private float backgroundColor = 0f;
-
-    private boolean showPopup = false;
-    private Rectangle popupBounds;
-    private Rectangle closeButton;
-
-    private PatrolAI ai; // <-- 분리된 AI 인스턴스
+    float worldWidth = 800;
+    float worldHeight = 480;
 
     @Override
     public void create() {
         batch = new SpriteBatch();
 
-        frame1 = new Texture(Gdx.files.internal("resources/chatgpt_character_walking_0001.png"));
-        frame2 = new Texture(Gdx.files.internal("resources/chatgpt_character_walking_0002.png"));
+        walls = new Array<>();
+        walls.add(new Rectangle(0, 0, worldWidth, 40));      // 바닥
+        walls.add(new Rectangle(0, 0, 20, worldHeight));     // 왼쪽 벽
+        walls.add(new Rectangle(worldWidth - 20, 0, 20, worldHeight)); // 오른쪽 벽
+        walls.add(new Rectangle(300, 40, 200, 40));          // 중간 벽
 
-        brickTexture = new Texture(Gdx.files.internal("resources/bricks.png"));
-        brickTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-        brickRegion = new TextureRegion(brickTexture);
+        player = new Player(100, 80);
+        ai = new PatrolAI(400, 80);
 
-        playerRect = new Rectangle(x, y, frame1.getWidth(), frame1.getHeight());
-
-        walls = new ArrayList<>();
-        walls.add(new Rectangle(0, 50, 800, 50));
-        walls.add(new Rectangle(500, 100, 50, 300));
-
-        popupBounds = new Rectangle(200, 200, 300, 150);
-        closeButton = new Rectangle(200 + 300 - 30, 200 + 150 - 30, 20, 20);
-
-        // 예시: AI를 화면 중앙에 배치
-        ai = new PatrolAI(
-            "resources/chatgpt_character_walking_0001.png",
-            "resources/chatgpt_character_walking_0002.png",
-            300, 100 // 원하는 위치 (x, y)
-        );
-
+        popup = new TestPopup(200, 150, 400, 200);
     }
 
     @Override
     public void render() {
         float delta = Gdx.graphics.getDeltaTime();
 
-        Gdx.gl.glClearColor(backgroundColor, 0, 0, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        // 팝업 열림 상태 체크
+        if (popup.isVisible()) {
+            // 팝업이 열려 있으면 입력은 팝업에만 전달
+            if (Gdx.input.justTouched()) {
+                float clickX = Gdx.input.getX();
+                float clickY = Gdx.graphics.getHeight() - Gdx.input.getY(); // 좌표계 변환
+                popup.handleClick(clickX, clickY);
+            }
+        } else {
+            // 팝업 닫힌 상태면 플레이어와 AI 업데이트
 
-        if (!showPopup) {
-            handleInput(delta);
+            player.update(delta, walls);
+            ai.update(delta, walls,player.getPosition().x,player.getPosition().y);
 
-            velocityY += gravity * delta;
-            y += velocityY * delta;
-            playerRect.setPosition(x, y);
-            onGround = false;
-
-            for (Rectangle wall : walls) {
-                if (playerRect.overlaps(wall)) {
-                    if (velocityY < 0) {
-                        y = wall.y + wall.height;
-                        onGround = true;
-                        velocityY = 0;
-                    } else if (velocityY > 0) {
-                        y = wall.y - playerRect.height;
-                        velocityY = 0;
-                    }
-                    playerRect.setPosition(x, y);
+            // AI가 멈춰있고 플레이어가 일정거리 내면 F 눌러서 팝업 열기
+            if (ai.isStopped() && player.getPosition().dst(ai.getPosition()) < 100) {
+                if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
+                    popup.setVisible(true);
                 }
             }
-
-            // 스테이지 이동 효과
-            if (x > stageRightBound) {
-                x = stageLeftBound;
-                backgroundColor = (backgroundColor + 0.2f) % 1f;
-            } else if (x + playerRect.width < stageLeftBound) {
-                x = stageRightBound - playerRect.width;
-                backgroundColor = (backgroundColor + 0.2f) % 1f;
-            }
-
-            // AI 업데이트 (벽을 피하는 로직 포함)
-            ai.update(delta, walls);
         }
 
-        // 애니메이션 타이머
-        animationTimer += delta;
-        if (animationTimer >= frameDuration) {
-            animationTimer -= frameDuration;
-            showFrame1 = !showFrame1;
-        }
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         batch.begin();
 
-        // 벽 그리기
+        // 벽 렌더링 (회색)
         for (Rectangle wall : walls) {
-            brickRegion.setRegion(0, 0, (int) wall.width, (int) wall.height);
-            batch.draw(brickRegion, wall.x, wall.y, wall.width, wall.height);
+            batch.draw(new com.badlogic.gdx.graphics.Texture(Gdx.files.internal("resources/bricks.png")),
+                wall.x, wall.y, wall.width, wall.height);
         }
 
-        // 캐릭터 그리기
-        Texture currentFrame = showFrame1 ? frame1 : frame2;
-        if (lookingLeft) {
-            batch.draw(currentFrame, x, y);
-        } else {
-            batch.draw(currentFrame, x + currentFrame.getWidth(), y,
-                -currentFrame.getWidth(), currentFrame.getHeight());
-        }
-
-        // AI 그리기
+        player.render(batch);
         ai.render(batch);
 
-        // 팝업
-        if (showPopup) {
-            batch.end();
-            batch.begin();
-            batch.setColor(1, 1, 1, 1);
-            batch.draw(brickTexture, popupBounds.x, popupBounds.y, popupBounds.width, popupBounds.height);
-            batch.draw(frame1, closeButton.x, closeButton.y, closeButton.width, closeButton.height);
+        // AI가 정지하면 AI 위에 'F' 표시
+        if (ai.isStopped()) {
+            // 간단 텍스트 대신 빨간색 글자 출력 등 처리 가능
+            // BitmapFont 필요, 여기선 생략
         }
 
         batch.end();
-    }
 
-
-
-    private void handleInput(float delta) {
-        float oldX = x;
-        boolean moved = false;
-
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            x -= speed * delta;
-            lookingLeft = true;
-            moved = true;
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            x += speed * delta;
-            lookingLeft = false;
-            moved = true;
-        }
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && onGround) {
-            velocityY = jumpPower;
-            onGround = false;
-        }
-
-        playerRect.setPosition(x, y);
-
-        for (Rectangle wall : walls) {
-            if (playerRect.overlaps(wall)) {
-                x = oldX;
-                playerRect.setPosition(x, y);
-                break;
-            }
-        }
-
-        if (!moved) {
-            animationTimer = 0f;
-            showFrame1 = true;
-        }
+        // 팝업 렌더링 (ShapeRenderer 사용하므로 batch.end() 후 호출)
+        popup.render(batch);
     }
 
     @Override
     public void dispose() {
         batch.dispose();
-        frame1.dispose();
-        frame2.dispose();
-        brickTexture.dispose();
+        player.dispose();
         ai.dispose();
+        popup.dispose();
     }
 }
