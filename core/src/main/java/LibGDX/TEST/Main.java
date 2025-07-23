@@ -54,11 +54,11 @@ public class Main extends ApplicationAdapter {
             ai.update(delta, walls,player.getPosition().x,player.getPosition().y);
 
             // AI가 멈춰있고 플레이어가 일정거리 내면 F 눌러서 팝업 열기
-            if (ai.isStopped() && player.getPosition().dst(ai.getPosition()) < 100) {
+/*            if (ai.isStopped() && player.getPosition().dst(ai.getPosition()) < 100) {
                 if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
                     popup.setVisible(true);
                 }
-            }
+            }*/
         }
 
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
