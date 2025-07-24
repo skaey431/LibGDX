@@ -1,3 +1,4 @@
+// PhysicsObject.java (abstractClass 패키지)
 package LibGDX.TEST.abstractClass;
 
 import com.badlogic.gdx.math.Rectangle;
@@ -23,7 +24,6 @@ public abstract class PhysicsObject {
     }
 
     public void update(float delta, Array<Rectangle> walls) {
-        // 중력
         velocity.y += gravity * delta;
         position.y += velocity.y * delta;
         updateHitbox();
@@ -43,13 +43,11 @@ public abstract class PhysicsObject {
             }
         }
 
-        // 좌우 이동
         position.x += velocity.x * delta;
         updateHitbox();
 
         for (Rectangle wall : walls) {
             if (hitbox.overlaps(wall)) {
-                // 이동 전 위치로 복구
                 position.x -= velocity.x * delta;
                 updateHitbox();
                 break;

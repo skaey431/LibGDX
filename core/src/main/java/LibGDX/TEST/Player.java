@@ -1,3 +1,4 @@
+// Player.java
 package LibGDX.TEST;
 
 import LibGDX.TEST.abstractClass.PhysicsObject;
@@ -24,12 +25,10 @@ public class Player extends PhysicsObject {
         this.hitbox.setSize(width, height);
     }
 
-
     public void update(float delta, Array<Rectangle> walls) {
         handleInput(delta);
         super.update(delta, walls);
 
-        // 애니메이션 타이머
         if (velocity.x != 0) {
             animationTimer += delta;
             if (animationTimer >= frameDuration) {
@@ -60,13 +59,15 @@ public class Player extends PhysicsObject {
 
     public void render(SpriteBatch batch) {
         Texture frame = showFrame1 ? frame1 : frame2;
+        int drawX = Math.round(position.x);
+        int drawY = Math.round(position.y);
+
         if (lookingLeft) {
-            batch.draw(frame, position.x, position.y);
+            batch.draw(frame, drawX, drawY);
         } else {
-            batch.draw(frame, position.x + width, position.y, -width, height);
+            batch.draw(frame, drawX + width, drawY, -width, height);
         }
     }
-
 
     public void dispose() {
         frame1.dispose();
