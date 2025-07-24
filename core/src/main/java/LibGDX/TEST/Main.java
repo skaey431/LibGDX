@@ -24,12 +24,14 @@ public class Main extends ApplicationAdapter {
     float worldWidth = 800;
     float worldHeight = 480;
 
+    TestPopup popup;
+
     @Override
     public void create() {
         batch = new SpriteBatch();
         brickTexture = new Texture(Gdx.files.internal("resources/bricks.png"));
 
-        backgroundTexture = new Texture(Gdx.files.internal("resources/img_19975_1.jpg"));
+        backgroundTexture = new Texture(Gdx.files.internal("resources/복도1.png"));
         backgroundWidth = backgroundTexture.getWidth();
         backgroundHeight = backgroundTexture.getHeight();
 
@@ -37,20 +39,43 @@ public class Main extends ApplicationAdapter {
         camera.setToOrtho(false, worldWidth, worldHeight);
 
         walls = new Array<>();
-        walls.add(new Rectangle(0, 0, worldWidth, 40));      // 바닥
-        walls.add(new Rectangle(0, 0, 20, worldHeight));     // 왼쪽 벽
-        walls.add(new Rectangle(worldWidth - 20, 0, 20, worldHeight)); // 오른쪽 벽
-        walls.add(new Rectangle(300, 40, 200, 40));          // 중간 벽
+        walls.add(new Rectangle(0, 40, backgroundWidth, 0));  // 바닥
 
-        player = new Player(100, 80);
-        ai = new PatrolAI(400, 80);
+        player = new Player(100, 40);
+        ai = new PatrolAI(400, 40);
+
+        popup = new TestPopup(200, 150);  // 고정 위치, 크기 자유롭게 설정
     }
 
     @Override
     public void render() {
         float delta = Gdx.graphics.getDeltaTime();
 
-        // 카메라 업데이트
+        // AI가 멈춰있고 팝업이 안 켜져 있으면 F 눌렀을 때 팝업 켜기
+        if (ai.isStopped() && !popup.isVisible() && Gdx.input.isKeyJustPressed(Input.Keys.F)) {
+            popup.setVisible(true);
+        }
+
+        // 팝업이 켜져 있으면 플레이어 움직임 봉인
+        if (!popup.isVisible()) {
+            player.update(delta, walls);
+        } else {
+            // 팝업 켜져 있을 때는 플레이어 움직임 멈춤
+            player.stopMoving();
+            player.update(delta, walls);  // 위치 고정시키기 위해 update 호출 유지
+        }
+
+        ai.update(delta, walls, player.getPosition().x, player.getPosition().y);
+
+        // 카메라가 플레이어를 따라가도록 이동
+        camera.position.x = player.getPosition().x + worldWidth / 8;
+        camera.position.y = player.getPosition().y + worldHeight / 4;
+
+        // 카메라 경계 제한
+        camera.position.x = Math.max(camera.position.x, worldWidth / 2);
+        camera.position.x = Math.min(camera.position.x, backgroundWidth - worldWidth / 2);
+        camera.position.y = Math.max(camera.position.y, worldHeight / 2);
+
         camera.update();
 
         // 화면 지우기
@@ -60,10 +85,8 @@ public class Main extends ApplicationAdapter {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        // 배경 그리기 (플레이어 위치를 기준으로 배경 이동)
-        float offsetX = camera.position.x - worldWidth / 2;
-        batch.draw(backgroundTexture, offsetX % backgroundWidth, 0, backgroundWidth, backgroundHeight);
-        batch.draw(backgroundTexture, offsetX % backgroundWidth - backgroundWidth, 0, backgroundWidth, backgroundHeight);
+        // 배경 그리기
+        batch.draw(backgroundTexture, 0, 0, backgroundWidth, backgroundHeight);
 
         // 벽 그리기
         for (Rectangle wall : walls) {
@@ -76,17 +99,21 @@ public class Main extends ApplicationAdapter {
 
         batch.end();
 
-        // 플레이어와 AI 업데이트
-        player.update(delta, walls);
-        ai.update(delta, walls, player.getPosition().x, player.getPosition().y);
+        // 팝업 렌더링 (ShapeRenderer와 BitmapFont 내부 포함)
+        popup.renderShape();
 
-        // 카메라가 플레이어를 따라가도록 이동
-        camera.position.x = player.getPosition().x + worldWidth / 4;
-        camera.position.y = player.getPosition().y + worldHeight / 4;
+        batch.begin();
+        popup.renderText(batch);
+        batch.end();
 
-        // 카메라 경계 제한
-        camera.position.x = Math.max(camera.position.x, worldWidth / 2); // 왼쪽 경계
-        camera.position.x = Math.min(camera.position.x, backgroundWidth - worldWidth / 2); // 오른쪽 경계
+        // 팝업 클릭 처리
+        if (Gdx.input.justTouched()) {
+            // 마우스 클릭 좌표를 화면 좌표에서 월드 좌표로 변환
+            int screenX = Gdx.input.getX();
+            int screenY = Gdx.input.getY();
+            // 팝업 버튼 클릭 체크는 스크린 좌표 기준
+            popup.handleClick(screenX, Gdx.graphics.getHeight() - screenY);
+        }
     }
 
     @Override
@@ -96,5 +123,6 @@ public class Main extends ApplicationAdapter {
         backgroundTexture.dispose();
         player.dispose();
         ai.dispose();
+        popup.dispose();
     }
 }

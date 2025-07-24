@@ -18,8 +18,8 @@ public class Player extends PhysicsObject {
 
     public Player(float x, float y) {
         super(x, y);
-        frame1 = new Texture(Gdx.files.internal("resources/chatgpt_character_walking_0001.png"));
-        frame2 = new Texture(Gdx.files.internal("resources/chatgpt_character_walking_0002.png"));
+        frame1 = new Texture(Gdx.files.internal("resources/doctor_character_walking_0001.png"));
+        frame2 = new Texture(Gdx.files.internal("resources/doctor_character_walking_0002.png"));
         this.width = frame1.getWidth();
         this.height = frame1.getHeight();
         this.hitbox.setSize(width, height);
