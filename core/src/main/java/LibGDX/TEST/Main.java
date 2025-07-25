@@ -20,6 +20,8 @@ public class Main extends ApplicationAdapter {
 
     Texture backgroundTexture;
     float backgroundWidth, backgroundHeight;
+    private MapOverlay mapOverlay;
+
 
     float worldWidth = 800;
     float worldHeight = 480;
@@ -37,6 +39,7 @@ public class Main extends ApplicationAdapter {
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, worldWidth, worldHeight);
+        mapOverlay = new MapOverlay(backgroundTexture, backgroundWidth, backgroundHeight, camera);
 
         walls = new Array<>();
         walls.add(new Rectangle(0, 40, backgroundWidth, 0));  // 바닥
@@ -49,72 +52,73 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void render() {
+
         float delta = Gdx.graphics.getDeltaTime();
 
-        // AI가 멈춰있고 팝업이 안 켜져 있으면 F 눌렀을 때 팝업 켜기
+        // 팝업 상태에 따른 입력 처리
         if (ai.isStopped() && !popup.isVisible() && Gdx.input.isKeyJustPressed(Input.Keys.F)) {
             popup.setVisible(true);
         }
 
-        // 팝업이 켜져 있으면 플레이어 움직임 봉인
         if (!popup.isVisible()) {
             player.update(delta, walls);
         } else {
-            // 팝업 켜져 있을 때는 플레이어 움직임 멈춤
             player.stopMoving();
-            player.update(delta, walls);  // 위치 고정시키기 위해 update 호출 유지
+            player.update(delta, walls); // 위치 고정
         }
 
         ai.update(delta, walls, player.getPosition().x, player.getPosition().y);
 
-        // 카메라가 플레이어를 따라가도록 이동
+        // 카메라 이동 및 제한
         camera.position.x = player.getPosition().x + worldWidth / 8;
         camera.position.y = player.getPosition().y + worldHeight / 4;
-
-        // 카메라 경계 제한
         camera.position.x = Math.max(camera.position.x, worldWidth / 2);
         camera.position.x = Math.min(camera.position.x, backgroundWidth - worldWidth / 2);
         camera.position.y = Math.max(camera.position.y, worldHeight / 2);
-
         camera.update();
 
         // 화면 지우기
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        // 카메라 기준 그리는 부분
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        // 배경 그리기
         batch.draw(backgroundTexture, 0, 0, backgroundWidth, backgroundHeight);
 
-        // 벽 그리기
         for (Rectangle wall : walls) {
             batch.draw(brickTexture, wall.x, wall.y, wall.width, wall.height);
         }
 
-        // 플레이어와 AI 그리기
         player.render(batch);
         ai.render(batch);
 
-        batch.end();
-
-        // 팝업 렌더링 (ShapeRenderer와 BitmapFont 내부 포함)
-        popup.renderShape();
-
-        batch.begin();
+        // 팝업 텍스트도 배치 안 깨지도록 같이 batch 내에서 렌더링
         popup.renderText(batch);
+
+
         batch.end();
+
+        try {
+            mapOverlay.render(batch, player.getPosition().x, player.getPosition().y);
+        } catch (Exception e) {
+            e.printStackTrace(); // 콘솔에 실제 예외 출력
+        }
+        // 팝업 박스는 shapeRenderer로 따로 렌더링 (카메라 영향 받지 않음)
+        popup.renderShape();
 
         // 팝업 클릭 처리
         if (Gdx.input.justTouched()) {
-            // 마우스 클릭 좌표를 화면 좌표에서 월드 좌표로 변환
             int screenX = Gdx.input.getX();
             int screenY = Gdx.input.getY();
-            // 팝업 버튼 클릭 체크는 스크린 좌표 기준
             popup.handleClick(screenX, Gdx.graphics.getHeight() - screenY);
         }
+
+        mapOverlay.update();
+
     }
+
 
     @Override
     public void dispose() {
