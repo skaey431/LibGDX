@@ -9,6 +9,10 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
+import LibGDX.TEST.StageMap;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main extends ApplicationAdapter {
     SpriteBatch batch;
@@ -18,44 +22,71 @@ public class Main extends ApplicationAdapter {
     Array<Rectangle> walls;
     Texture brickTexture;
 
-    Texture backgroundTexture;
-    float backgroundWidth, backgroundHeight;
-    private MapOverlay mapOverlay;
-
-
     float worldWidth = 800;
     float worldHeight = 480;
 
     TestPopup popup;
+
+    List<Stage> stages;
+    int currentStageIndex;
+    Stage currentStage;
+
+    StageMap stageMap;
 
     @Override
     public void create() {
         batch = new SpriteBatch();
         brickTexture = new Texture(Gdx.files.internal("resources/bricks.png"));
 
-        backgroundTexture = new Texture(Gdx.files.internal("resources/복도1.png"));
-        backgroundWidth = backgroundTexture.getWidth();
-        backgroundHeight = backgroundTexture.getHeight();
-
         camera = new OrthographicCamera();
         camera.setToOrtho(false, worldWidth, worldHeight);
-        mapOverlay = new MapOverlay(backgroundTexture, backgroundWidth, backgroundHeight, camera);
 
-        walls = new Array<>();
-        walls.add(new Rectangle(0, 40, backgroundWidth, 0));  // 바닥
+        stages = new ArrayList<>();
+
+        // Stage 1 - 방1
+        stages.add(new Stage(
+            "resources/room1.png",
+            new Array<Rectangle>() {{
+                add(new Rectangle(0, 40, 800, 0));
+            }},
+            400, 40
+        ));
+
+        // Stage 2 - 복도
+        stages.add(new Stage(
+            "resources/hallway.png",
+            new Array<Rectangle>() {{
+                add(new Rectangle(0, 40, 1000, 0));
+            }},
+            600, 40
+        ));
+
+        // Stage 3 - 방2
+        stages.add(new Stage(
+            "resources/room2.png",
+            new Array<Rectangle>() {{
+                add(new Rectangle(0, 40, 800, 0));
+            }},
+            300, 40
+        ));
+
+        currentStageIndex = 0;
+        currentStage = stages.get(currentStageIndex);
 
         player = new Player(100, 40);
-        ai = new PatrolAI(400, 40);
+        ai = new PatrolAI(currentStage.aiStartX, currentStage.aiStartY);
+        popup = new TestPopup(200, 150);
 
-        popup = new TestPopup(200, 150);  // 고정 위치, 크기 자유롭게 설정
+        walls = new Array<>();
+        walls.addAll(currentStage.walls);
+
+        stageMap = new StageMap(stages); // 전체 맵 생성
     }
 
     @Override
     public void render() {
-
         float delta = Gdx.graphics.getDeltaTime();
 
-        // 팝업 상태에 따른 입력 처리
         if (ai.isStopped() && !popup.isVisible() && Gdx.input.isKeyJustPressed(Input.Keys.F)) {
             popup.setVisible(true);
         }
@@ -64,69 +95,83 @@ public class Main extends ApplicationAdapter {
             player.update(delta, walls);
         } else {
             player.stopMoving();
-            player.update(delta, walls); // 위치 고정
+            player.update(delta, walls);
         }
 
         ai.update(delta, walls, player.getPosition().x, player.getPosition().y);
 
-        // 카메라 이동 및 제한
+        if (player.getPosition().x > currentStage.width) {
+            moveToNextStage(true);
+        } else if (player.getPosition().x < 0) {
+            moveToNextStage(false);
+        }
+
         camera.position.x = player.getPosition().x + worldWidth / 8;
         camera.position.y = player.getPosition().y + worldHeight / 4;
+
         camera.position.x = Math.max(camera.position.x, worldWidth / 2);
-        camera.position.x = Math.min(camera.position.x, backgroundWidth - worldWidth / 2);
+        camera.position.x = Math.min(camera.position.x, currentStage.width - worldWidth / 2);
         camera.position.y = Math.max(camera.position.y, worldHeight / 2);
+
         camera.update();
 
-        // 화면 지우기
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // 카메라 기준 그리는 부분
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        batch.draw(backgroundTexture, 0, 0, backgroundWidth, backgroundHeight);
+        batch.draw(currentStage.backgroundTexture, 0, 0, currentStage.width, currentStage.height);
 
         for (Rectangle wall : walls) {
             batch.draw(brickTexture, wall.x, wall.y, wall.width, wall.height);
         }
 
-        player.render(batch);
         ai.render(batch);
-
-        // 팝업 텍스트도 배치 안 깨지도록 같이 batch 내에서 렌더링
+        player.render(batch);
         popup.renderText(batch);
-
 
         batch.end();
 
-        try {
-            mapOverlay.render(batch, player.getPosition().x, player.getPosition().y);
-        } catch (Exception e) {
-            e.printStackTrace(); // 콘솔에 실제 예외 출력
-        }
-        // 팝업 박스는 shapeRenderer로 따로 렌더링 (카메라 영향 받지 않음)
         popup.renderShape();
 
-        // 팝업 클릭 처리
         if (Gdx.input.justTouched()) {
             int screenX = Gdx.input.getX();
             int screenY = Gdx.input.getY();
             popup.handleClick(screenX, Gdx.graphics.getHeight() - screenY);
         }
 
-        mapOverlay.update();
-
+        // 전체 맵 렌더링
+        stageMap.render(currentStageIndex);
     }
 
+    private void moveToNextStage(boolean toRight) {
+        int nextIndex = currentStageIndex + (toRight ? 1 : -1);
+        if (nextIndex < 0 || nextIndex >= stages.size()) return;
+
+        currentStageIndex = nextIndex;
+        currentStage = stages.get(currentStageIndex);
+
+        ai.setPosition(currentStage.aiStartX, currentStage.aiStartY);
+
+        walls.clear();
+        walls.addAll(currentStage.walls);
+
+        if (toRight) {
+            player.setPosition(0, 40);
+        } else {
+            player.setPosition(currentStage.width - 10, 40);
+        }
+    }
 
     @Override
     public void dispose() {
         batch.dispose();
         brickTexture.dispose();
-        backgroundTexture.dispose();
+        for (Stage s : stages) s.dispose();
         player.dispose();
         ai.dispose();
         popup.dispose();
+        stageMap.dispose();
     }
 }

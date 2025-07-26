@@ -1,4 +1,3 @@
-// PhysicsObject.java (abstractClass 패키지)
 package LibGDX.TEST.abstractClass;
 
 import com.badlogic.gdx.math.Rectangle;
@@ -84,5 +83,11 @@ public abstract class PhysicsObject {
 
     private void updateHitbox() {
         hitbox.setPosition(position.x, position.y);
+    }
+
+    // 추가: AI 등 위치 직접 세팅 메서드
+    public void setPosition(float x, float y) {
+        this.position.set(x, y);
+        updateHitbox();
     }
 }
