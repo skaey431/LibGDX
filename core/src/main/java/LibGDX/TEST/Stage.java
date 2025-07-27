@@ -5,22 +5,34 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 
-// 스테이지 클래스 (배경, 크기, 벽, AI 위치 등)
-//
+import java.util.ArrayList;
+
 public class Stage {
+    public final String id;  // 스테이지 고유 ID
+
     Texture backgroundTexture;
     float width, height;
     Array<Rectangle> walls;
-    float aiStartX, aiStartY;
+    ArrayList<AIInfo> aiInfos;  // AI 정보 리스트 (ID, 타입, 위치 포함)
 
-    public Stage(String backgroundPath, Array<Rectangle> walls, float aiStartX, float aiStartY) {
+    public Stage(String id, String backgroundPath, Array<Rectangle> walls, ArrayList<AIInfo> aiInfos) {
+        this.id = id;
         this.backgroundTexture = new Texture(Gdx.files.internal(backgroundPath));
         this.width = backgroundTexture.getWidth();
         this.height = backgroundTexture.getHeight();
         this.walls = walls;
-        this.aiStartX = aiStartX;
-        this.aiStartY = aiStartY;
-        walls.add(new Rectangle(0,40,backgroundTexture.getWidth(),0));
+        this.aiInfos = aiInfos;
+
+        // 바닥 추가
+        walls.add(new Rectangle(0, 40, backgroundTexture.getWidth(), 0));
+    }
+
+    public Texture getBackgroundTexture() {
+        return backgroundTexture;
+    }
+
+    public ArrayList<AIInfo> getAiInfos() {
+        return aiInfos;
     }
 
     public void dispose() {

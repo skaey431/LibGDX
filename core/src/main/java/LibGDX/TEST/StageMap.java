@@ -3,8 +3,10 @@ package LibGDX.TEST;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class StageMap {
@@ -16,10 +18,14 @@ public class StageMap {
     // 전체 맵 크기
     private final float size = 60f;
     private final float spacing = 20f;
+    private float width = 500;
+    private float height = 200;
+    List<Stage> stages;
 
-    public StageMap(List<?> stages) {
+    public StageMap(List<Stage> stages) {
         this.stageCount = stages.size();
         this.shapeRenderer = new ShapeRenderer();
+        this.stages = stages;
     }
 
     public void update() {
@@ -32,7 +38,14 @@ public class StageMap {
         update();
         if (!visible) return;
 
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+
+        // 팝업 배경
+        shapeRenderer.setColor(0, 0, 0, 0.5f);
+        shapeRenderer.rect((Gdx.graphics.getWidth()-width)/2, (Gdx.graphics.getHeight()-height)/2,  width, height);
 
         float totalWidth = stageCount * size + (stageCount - 1) * spacing;
         float baseX = (Gdx.graphics.getWidth() - totalWidth) / 2f;
@@ -50,8 +63,12 @@ public class StageMap {
 
             shapeRenderer.rect(x, y, size, size);
         }
+        for (Stage stage : stages){
+            shapeRenderer.rect(0, 0, stage.width/16, size);
+        }
 
         shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 
     public void dispose() {
