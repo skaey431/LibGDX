@@ -59,7 +59,11 @@ public class Main extends ApplicationAdapter {
             new ArrayList<AIInfo>() {{
                 add(new AIInfo("patrol1", "Patrol", new Vector2(400, 40)));
                 add(new AIInfo("patrol2", "Patrol", new Vector2(200, 40)));
-            }}
+            }},
+            0,
+            0,
+            50,
+            true
         ));
 
         stages.add(new Stage(
@@ -70,7 +74,11 @@ public class Main extends ApplicationAdapter {
             }},
             new ArrayList<AIInfo>() {{
                 add(new AIInfo("patrol3", "Patrol", new Vector2(600, 40)));
-            }}
+            }},
+            50,
+            0,
+            30,
+            true
         ));
 
         stages.add(new Stage(
@@ -81,7 +89,11 @@ public class Main extends ApplicationAdapter {
             }},
             new ArrayList<AIInfo>() {{
                 add(new AIInfo("patrol4", "Patrol", new Vector2(300, 40)));
-            }}
+            }},
+            50+4096/16,
+            0,
+            50,
+            true
         ));
 
         currentStageIndex = 0;
