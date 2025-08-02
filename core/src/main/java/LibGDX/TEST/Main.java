@@ -76,7 +76,7 @@ public class Main extends ApplicationAdapter {
                 add(new AIInfo("patrol3", "Patrol", new Vector2(600, 40)));
             }},
             50,
-            0,
+            10,
             30,
             true
         ));
@@ -95,7 +95,20 @@ public class Main extends ApplicationAdapter {
             50,
             true
         ));
-
+        stages.add(new Stage(
+            "hallway1-2",
+            "resources/hallway.png",
+            new Array<Rectangle>() {{
+                add(new Rectangle(0, 40, 0, 0));
+            }},
+            new ArrayList<AIInfo>() {{
+                add(new AIInfo("patrol3", "Patrol", new Vector2(600, 40)));
+            }},
+            10,
+            50,
+            30,
+            false
+        ));
         currentStageIndex = 0;
         currentStage = stages.get(currentStageIndex);
 
