@@ -1,4 +1,4 @@
-package LibGDX.TEST;
+package LibGDX.TEST.entity.AI;
 
 import com.badlogic.gdx.math.Vector2;
 

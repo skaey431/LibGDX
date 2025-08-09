@@ -1,5 +1,8 @@
 package LibGDX.TEST;
 
+import LibGDX.TEST.entity.AI.AIInfo;
+import LibGDX.TEST.entity.AI.PatrolAI;
+import LibGDX.TEST.entity.Player;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -124,7 +127,7 @@ public class Main extends ApplicationAdapter {
         for (AIInfo info : currentStage.getAiInfos()) {
             PatrolAI ai = null;
             if (info.type.equals("Patrol")) {
-                ai = new PatrolAI(info.startPosition.x, info.startPosition.y);
+                ai = new PatrolAI(info.startPosition.x, info.startPosition.y, currentStage.walls, player.getPosition());
                 patrolAIs.add(ai);
                 aiMap.put(info.id, ai);
             }
@@ -161,7 +164,7 @@ public class Main extends ApplicationAdapter {
 
         // 모든 AI 업데이트 (플레이어 위치 전달)
         for (PatrolAI ai : patrolAIs) {
-            ai.update(delta, walls, player.getPosition().x, player.getPosition().y);
+            ai.update(delta);
         }
 
         // 스테이지 이동 체크
@@ -250,7 +253,7 @@ public class Main extends ApplicationAdapter {
         for (AIInfo info : currentStage.getAiInfos()) {
             PatrolAI ai = null;
             if (info.type.equals("Patrol")) {
-                ai = new PatrolAI(info.startPosition.x, info.startPosition.y);
+                ai = new PatrolAI(info.startPosition.x, info.startPosition.y, currentStage.walls, player.getPosition());
                 patrolAIs.add(ai);
                 aiMap.put(info.id, ai);
             }
