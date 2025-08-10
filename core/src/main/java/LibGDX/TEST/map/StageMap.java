@@ -1,4 +1,4 @@
-package LibGDX.TEST;
+package LibGDX.TEST.map;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;

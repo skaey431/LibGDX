@@ -7,6 +7,11 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class AnimationComponent {
     private Texture frame1;
     private Texture frame2;
+
+    public void setShowFrame1(boolean showFrame1) {
+        this.showFrame1 = showFrame1;
+    }
+
     private boolean showFrame1 = true;
     private float animationTimer = 0f;
     private final float frameDuration = 0.25f;

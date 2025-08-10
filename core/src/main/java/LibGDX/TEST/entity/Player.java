@@ -66,9 +66,10 @@ public class Player extends BaseEntity {
     }
 
     public void stopMoving() {
+        animation.setShowFrame1(true);
     }
-
     public void setPosition(float x, float y) {
-        position.set(x,y);
+        position.set(x, y);
+        movement.getPosition().set(position);
     }
 }

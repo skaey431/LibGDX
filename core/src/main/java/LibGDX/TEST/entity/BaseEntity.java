@@ -5,6 +5,8 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 public abstract class BaseEntity {
+
+
     protected Vector2 position;
     protected Rectangle hitbox;
     protected float width, height;

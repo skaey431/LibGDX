@@ -3,6 +3,9 @@ package LibGDX.TEST;
 import LibGDX.TEST.entity.AI.AIInfo;
 import LibGDX.TEST.entity.AI.PatrolAI;
 import LibGDX.TEST.entity.Player;
+import LibGDX.TEST.map.MiniMap;
+import LibGDX.TEST.map.Stage;
+import LibGDX.TEST.map.StageMap;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -118,7 +121,7 @@ public class Main extends ApplicationAdapter {
         player = new Player(100, 40);
 
         walls = new Array<>();
-        walls.addAll(currentStage.walls);
+        walls.addAll(currentStage.getWalls());
 
         // AI 객체들 생성 및 관리
         patrolAIs = new ArrayList<>();
@@ -127,7 +130,7 @@ public class Main extends ApplicationAdapter {
         for (AIInfo info : currentStage.getAiInfos()) {
             PatrolAI ai = null;
             if (info.type.equals("Patrol")) {
-                ai = new PatrolAI(info.startPosition.x, info.startPosition.y, currentStage.walls, player.getPosition());
+                ai = new PatrolAI(info.startPosition.x, info.startPosition.y, currentStage.getWalls(), player.getPosition());
                 patrolAIs.add(ai);
                 aiMap.put(info.id, ai);
             }
@@ -136,7 +139,7 @@ public class Main extends ApplicationAdapter {
 
         popup = new TestPopup(200, 150);
 
-        miniMap = new MiniMap(camera, currentStage.backgroundTexture.getHeight(), currentStage.backgroundTexture.getWidth());  // 미니맵 생성
+        miniMap = new MiniMap(camera, currentStage.getBackgroundTexture().getHeight(), currentStage.getBackgroundTexture().getWidth());  // 미니맵 생성
         stageMap = new StageMap(stages);        // 스테이지맵 생성
     }
 
@@ -168,7 +171,7 @@ public class Main extends ApplicationAdapter {
         }
 
         // 스테이지 이동 체크
-        if (player.getPosition().x > currentStage.width) {
+        if (player.getPosition().x > currentStage.getWidth()) {
             moveToNextStage(true);
         } else if (player.getPosition().x < 0) {
             moveToNextStage(false);
@@ -179,7 +182,7 @@ public class Main extends ApplicationAdapter {
         camera.position.y = player.getPosition().y + worldHeight / 4;
 
         camera.position.x = Math.max(camera.position.x, worldWidth / 2);
-        camera.position.x = Math.min(camera.position.x, currentStage.width - worldWidth / 2);
+        camera.position.x = Math.min(camera.position.x, currentStage.getWidth() - worldWidth / 2);
         camera.position.y = Math.max(camera.position.y, worldHeight / 2);
 
         camera.update();
@@ -192,7 +195,7 @@ public class Main extends ApplicationAdapter {
         batch.begin();
 
         // 배경 그리기
-        batch.draw(currentStage.getBackgroundTexture(), 0, 0, currentStage.width, currentStage.height);
+        batch.draw(currentStage.getBackgroundTexture(), 0, 0, currentStage.getWidth(), currentStage.getHeight());
 
         // 벽 그리기
         for (Rectangle wall : walls) {
@@ -243,7 +246,7 @@ public class Main extends ApplicationAdapter {
 
         // 벽 갱신
         walls.clear();
-        walls.addAll(currentStage.walls);
+        walls.addAll(currentStage.getWalls());
 
         // AI 리스트 갱신 (이전 AI 객체들 dispose 필요 시 추가)
         for (PatrolAI ai : patrolAIs) ai.dispose();
@@ -251,9 +254,9 @@ public class Main extends ApplicationAdapter {
         aiMap.clear();
 
         for (AIInfo info : currentStage.getAiInfos()) {
-            PatrolAI ai = null;
+            PatrolAI ai;
             if (info.type.equals("Patrol")) {
-                ai = new PatrolAI(info.startPosition.x, info.startPosition.y, currentStage.walls, player.getPosition());
+                ai = new PatrolAI(info.startPosition.x, info.startPosition.y, currentStage.getWalls(), player.getPosition());
                 patrolAIs.add(ai);
                 aiMap.put(info.id, ai);
             }
@@ -263,7 +266,7 @@ public class Main extends ApplicationAdapter {
         if (toRight) {
             player.setPosition(0, 40);
         } else {
-            player.setPosition(currentStage.width - 10, 40);
+            player.setPosition(currentStage.getWidth() - 10, 40);
         }
     }
 

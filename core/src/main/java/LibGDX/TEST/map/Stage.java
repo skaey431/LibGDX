@@ -1,4 +1,4 @@
-package LibGDX.TEST;
+package LibGDX.TEST.map;
 
 import LibGDX.TEST.entity.AI.AIInfo;
 import com.badlogic.gdx.Gdx;
@@ -10,6 +10,38 @@ import com.badlogic.gdx.utils.Array;
 import java.util.ArrayList;
 
 public class Stage {
+    public float getWidth() {
+        return width;
+    }
+
+    public float getHeight() {
+        return height;
+    }
+
+    public Array<Rectangle> getWalls() {
+        return walls;
+    }
+
+    public float getX() {
+        return x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
+    public float getSize() {
+        return size;
+    }
+
+    public boolean isVertical() {
+        return vertical;
+    }
+
+    public Vector2 getSizeVector() {
+        return sizeVector;
+    }
+
     public final String id;  // 스테이지 고유 ID
 
     Texture backgroundTexture;
@@ -22,7 +54,11 @@ public class Stage {
     boolean vertical;
     Vector2 sizeVector;
 
-    public Stage(String id, String backgroundPath, Array<Rectangle> walls, ArrayList<AIInfo> aiInfos,float x,float y,float size,boolean vertical) {
+    public String getId() {
+        return id;
+    }
+
+    public Stage(String id, String backgroundPath, Array<Rectangle> walls, ArrayList<AIInfo> aiInfos, float x, float y, float size, boolean vertical) {
         this.id = id;
         this.backgroundTexture = new Texture(Gdx.files.internal(backgroundPath));
         this.width = backgroundTexture.getWidth();

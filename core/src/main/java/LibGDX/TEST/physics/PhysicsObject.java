@@ -1,4 +1,4 @@
-package LibGDX.TEST.abstractClass;
+package LibGDX.TEST.physics;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
