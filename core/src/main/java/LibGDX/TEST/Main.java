@@ -213,7 +213,7 @@ public class Main extends ApplicationAdapter {
 
         // 미니맵은 스테이지맵이 열리지 않았을 때만 그린다
         if (!isStageMapOpen) {
-            miniMap.render(batch,player.getPosition().x, player.getPosition().y);
+            miniMap.render(batch,player.getPosition());
         }
 
         batch.end();

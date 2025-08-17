@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
 
 public class MiniMap {
     private ShapeRenderer shapeRenderer;
@@ -23,7 +24,7 @@ public class MiniMap {
         // 필요시 확장 가능
     }
 
-    public void render(SpriteBatch batch, float playerX, float playerY) {
+    public void render(SpriteBatch batch, Vector2 playerPos) {
         batch.end();
 
         Gdx.gl.glEnable(GL20.GL_BLEND); // 💡 투명도 적용을 위해 블렌딩 활성화
@@ -31,8 +32,8 @@ public class MiniMap {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        float mapX = camera.position.x + 300;
-        float mapY = camera.position.y + 180;
+        float mapX = camera.position.x + 230;
+        float mapY = camera.position.y + 130;
         float mapWidth = 150;
         float mapHeight = 100;
 
@@ -40,8 +41,8 @@ public class MiniMap {
         shapeRenderer.setColor(0.3f, 0.3f, 0.3f, 0.5f);
         shapeRenderer.rect(mapX, mapY, mapWidth, mapHeight);
 
-        float dotX = mapX + (playerX / backgroundWidth) * mapWidth;
-        float dotY = mapY + (playerY / backgroundHeight) * mapHeight;
+        float dotX = mapX + (playerPos.x / backgroundWidth) * mapWidth;
+        float dotY = mapY + (playerPos.y / backgroundHeight) * mapHeight;
 
         shapeRenderer.setColor(1, 0, 0, 1);
         shapeRenderer.circle(dotX, dotY, 3);
