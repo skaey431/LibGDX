@@ -1,6 +1,6 @@
 package LibGDX.TEST.map;
 
-import LibGDX.TEST.entity.AI.AIInfo;
+import LibGDX.TEST.entity.BaseEntity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
@@ -47,7 +47,7 @@ public class Stage {
     Texture backgroundTexture;
     float width, height;
     Array<Rectangle> walls;
-    ArrayList<AIInfo> aiInfos;  // AI 정보 리스트 (ID, 타입, 위치 포함)
+    ArrayList<BaseEntity> entities = new ArrayList<BaseEntity>();  // AI 정보 리스트 (ID, 타입, 위치 포함)
     float x;
     float y;
     float size;
@@ -58,13 +58,12 @@ public class Stage {
         return id;
     }
 
-    public Stage(String id, String backgroundPath, Array<Rectangle> walls, ArrayList<AIInfo> aiInfos, float x, float y, float size, boolean vertical) {
+    public Stage(String id, String backgroundPath, Array<Rectangle> walls,  float x, float y, float size, boolean vertical) {
         this.id = id;
         this.backgroundTexture = new Texture(Gdx.files.internal(backgroundPath));
         this.width = backgroundTexture.getWidth();
         this.height = backgroundTexture.getHeight();
         this.walls = walls;
-        this.aiInfos = aiInfos;
         this.x = x;
         this.y = y;
         this.size = size;
@@ -78,13 +77,16 @@ public class Stage {
         // 바닥 추가
         walls.add(new Rectangle(0, 40, backgroundTexture.getWidth(), 0));
     }
+    public void makeEntity(BaseEntity entity) {
+        this.entities.add(entity);
+    }
 
     public Texture getBackgroundTexture() {
         return backgroundTexture;
     }
 
-    public ArrayList<AIInfo> getAiInfos() {
-        return aiInfos;
+    public ArrayList<BaseEntity> getEntities() {
+        return entities;
     }
 
     public void dispose() {

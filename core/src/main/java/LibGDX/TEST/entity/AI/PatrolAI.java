@@ -29,11 +29,23 @@ public class PatrolAI extends BaseEntity {
 
     @Override
     public void render(SpriteBatch batch) {
-        aiController.render(batch);
+
+        try {
+            aiController.render(batch);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
     }
 
+
+    @Override
     public void dispose() {
         aiController.dispose();
+    }
+    @Override
+    public void check() {
+        System.out.println("checked");
     }
 
     public boolean isStopped() {

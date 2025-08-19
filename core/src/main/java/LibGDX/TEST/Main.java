@@ -1,7 +1,7 @@
 package LibGDX.TEST;
 
-import LibGDX.TEST.entity.AI.AIInfo;
 import LibGDX.TEST.entity.AI.PatrolAI;
+import LibGDX.TEST.entity.BaseEntity;
 import LibGDX.TEST.entity.Player;
 import LibGDX.TEST.map.MiniMap;
 import LibGDX.TEST.map.Stage;
@@ -14,7 +14,6 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
 import java.util.ArrayList;
@@ -26,8 +25,7 @@ public class Main extends ApplicationAdapter {
     SpriteBatch batch;
     OrthographicCamera camera;
     Player player;
-    ArrayList<PatrolAI> patrolAIs;  // 여러 AI 관리용 리스트
-    Map<String, PatrolAI> aiMap;    // AI ID별 빠른 조회용 맵
+
     Array<Rectangle> walls;
     Texture brickTexture;
 
@@ -55,16 +53,11 @@ public class Main extends ApplicationAdapter {
 
         stages = new ArrayList<>();
 
-        // 스테이지 생성 - AIInfo 리스트 사용
         stages.add(new Stage(
             "room1",
             "resources/room1.png",
             new Array<Rectangle>() {{
                 add(new Rectangle(0, 40, 800, 0));
-            }},
-            new ArrayList<AIInfo>() {{
-                add(new AIInfo("patrol1", "Patrol", new Vector2(400, 40)));
-                add(new AIInfo("patrol2", "Patrol", new Vector2(200, 40)));
             }},
             0,
             0,
@@ -78,9 +71,6 @@ public class Main extends ApplicationAdapter {
             new Array<Rectangle>() {{
                 add(new Rectangle(0, 40, 1000, 0));
             }},
-            new ArrayList<AIInfo>() {{
-                add(new AIInfo("patrol3", "Patrol", new Vector2(600, 40)));
-            }},
             50,
             10,
             30,
@@ -93,9 +83,6 @@ public class Main extends ApplicationAdapter {
             new Array<Rectangle>() {{
                 add(new Rectangle(0, 40, 800, 0));
             }},
-            new ArrayList<AIInfo>() {{
-                add(new AIInfo("patrol4", "Patrol", new Vector2(300, 40)));
-            }},
             50+4096/16,
             0,
             50,
@@ -106,9 +93,6 @@ public class Main extends ApplicationAdapter {
             "resources/hallway.png",
             new Array<Rectangle>() {{
                 add(new Rectangle(0, 40, 0, 0));
-            }},
-            new ArrayList<AIInfo>() {{
-                add(new AIInfo("patrol3", "Patrol", new Vector2(600, 40)));
             }},
             10,
             50,
@@ -122,20 +106,6 @@ public class Main extends ApplicationAdapter {
 
         walls = new Array<>();
         walls.addAll(currentStage.getWalls());
-
-        // AI 객체들 생성 및 관리
-        patrolAIs = new ArrayList<>();
-        aiMap = new HashMap<>();
-
-        for (AIInfo info : currentStage.getAiInfos()) {
-            PatrolAI ai = null;
-            if (info.type.equals("Patrol")) {
-                ai = new PatrolAI(info.startPosition.x, info.startPosition.y, currentStage.getWalls(), player.getPosition());
-                patrolAIs.add(ai);
-                aiMap.put(info.id, ai);
-            }
-            // 필요하면 타입별 분기 추가 가능
-        }
 
         popup = new TestPopup(200, 150);
 
@@ -152,11 +122,7 @@ public class Main extends ApplicationAdapter {
             isStageMapOpen = !isStageMapOpen;
         }
 
-        // 팝업과 AI 상태에 따른 입력 처리
-        boolean anyAIStopped = patrolAIs.stream().anyMatch(PatrolAI::isStopped);
-        if (anyAIStopped && !popup.isVisible() && Gdx.input.isKeyJustPressed(Input.Keys.F)) {
-            popup.setVisible(true);
-        }
+
 
         if (!popup.isVisible()) {
             player.update(delta, walls);
@@ -165,10 +131,6 @@ public class Main extends ApplicationAdapter {
             player.update(delta, walls);
         }
 
-        // 모든 AI 업데이트 (플레이어 위치 전달)
-        for (PatrolAI ai : patrolAIs) {
-            ai.update(delta);
-        }
 
         // 스테이지 이동 체크
         if (player.getPosition().x > currentStage.getWidth()) {
@@ -202,10 +164,7 @@ public class Main extends ApplicationAdapter {
             batch.draw(brickTexture, wall.x, wall.y, wall.width, wall.height);
         }
 
-        // AI 렌더링
-        for (PatrolAI ai : patrolAIs) {
-            ai.render(batch);
-        }
+
 
         // 플레이어, 팝업 텍스트 렌더링
         player.render(batch);
@@ -215,13 +174,16 @@ public class Main extends ApplicationAdapter {
         if (!isStageMapOpen) {
             miniMap.render(batch,player.getPosition());
         }
+        for (BaseEntity entity : currentStage.getEntities()) {
+            entity.render(batch);
+            entity.check();
+        }
 
         batch.end();
 
 
         // 팝업 도형 렌더링
         popup.renderShape();
-
 
 
 
@@ -244,23 +206,15 @@ public class Main extends ApplicationAdapter {
         currentStageIndex = nextIndex;
         currentStage = stages.get(currentStageIndex);
 
+        miniMap.update(currentStage.getWidth(), currentStage.getHeight());
+
+
         // 벽 갱신
         walls.clear();
         walls.addAll(currentStage.getWalls());
+        currentStage.makeEntity(new PatrolAI(100,50,currentStage.getWalls(),player.getPosition()));
 
-        // AI 리스트 갱신 (이전 AI 객체들 dispose 필요 시 추가)
-        for (PatrolAI ai : patrolAIs) ai.dispose();
-        patrolAIs.clear();
-        aiMap.clear();
 
-        for (AIInfo info : currentStage.getAiInfos()) {
-            PatrolAI ai;
-            if (info.type.equals("Patrol")) {
-                ai = new PatrolAI(info.startPosition.x, info.startPosition.y, currentStage.getWalls(), player.getPosition());
-                patrolAIs.add(ai);
-                aiMap.put(info.id, ai);
-            }
-        }
 
         // 플레이어 위치 재설정
         if (toRight) {
@@ -276,7 +230,9 @@ public class Main extends ApplicationAdapter {
         brickTexture.dispose();
 
         for (Stage s : stages) s.dispose();
-        for (PatrolAI ai : patrolAIs) ai.dispose();
+        for (BaseEntity entity : currentStage.getEntities()) {
+            entity.dispose();
+        }
 
         player.dispose();
         popup.dispose();

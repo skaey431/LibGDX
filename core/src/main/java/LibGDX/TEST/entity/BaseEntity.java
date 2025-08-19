@@ -33,4 +33,7 @@ public abstract class BaseEntity {
     public abstract void update(float delta);
 
     public abstract void render(SpriteBatch batch);
+
+    public abstract void dispose();
+    public abstract void check();
 }

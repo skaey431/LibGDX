@@ -72,4 +72,6 @@ public class Player extends BaseEntity {
         position.set(x, y);
         movement.getPosition().set(position);
     }
+    @Override
+    public void check(){};
 }

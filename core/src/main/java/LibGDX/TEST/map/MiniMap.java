@@ -20,8 +20,12 @@ public class MiniMap {
         this.backgroundWidth = backgroundWidth;
     }
 
-    public void update() {
-        // 필요시 확장 가능
+    public void update(float backgroundWidth, float backgroundHeight) {
+        this.backgroundWidth = backgroundWidth;
+        this.backgroundHeight = backgroundHeight;
+    }
+    public void entity() {
+
     }
 
     public void render(SpriteBatch batch, Vector2 playerPos) {
@@ -42,7 +46,6 @@ public class MiniMap {
 
         // 2️⃣ 전체 맵 비율 계산
         float scaledX = (playerPos.x / 800) * mapWidth;
-        System.out.println(playerPos.x + "    "+(playerPos.x / backgroundWidth) * mapWidth + "     " + backgroundWidth);
         float scaledY = (playerPos.y / backgroundHeight) * mapHeight;
 
         float dotX, offsetX = 0;
@@ -52,14 +55,13 @@ public class MiniMap {
             // 좌측 끝: 플레이어 점 이동
             dotX = mapX + scaledX;
             offsetX = 0;
-        } else if (scaledX < (backgroundWidth-800) + mapWidth / 2f) {
-            // 중앙: 플레이어 점 중앙 고정
+        } else if ( scaledX - mapWidth <(backgroundWidth/800 - 1) * mapWidth/ 2f - mapWidth / 2f   )  {
             dotX = mapX + mapWidth / 2f;
-            offsetX = scaledX - mapWidth / 2f;
+
         } else {
             // 우측 끝: 플레이어 점 이동
-            dotX = mapX + mapWidth - (mapWidth - scaledX);
-            offsetX = scaledX - mapWidth / 2f;
+            dotX = mapX + scaledX;
+            offsetX = ((backgroundWidth/800 - 1) * mapWidth/ 2f);
         }
 
         float dotY = mapY + scaledY; // 세로는 단순 비율
