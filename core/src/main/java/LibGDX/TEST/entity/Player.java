@@ -53,6 +53,9 @@ public class Player extends BaseEntity {
     }
 
     @Override
+    public void updateMap(Array<Rectangle> walls, Vector2 playerPosition) {}
+
+    @Override
     public void update(float delta) {
 
     }

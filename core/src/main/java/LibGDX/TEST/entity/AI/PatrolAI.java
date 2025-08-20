@@ -9,17 +9,20 @@ import com.badlogic.gdx.utils.Array;
 public class PatrolAI extends BaseEntity {
     private PatrolAIController aiController;
 
-    public PatrolAI(float x, float y, Array<Rectangle> walls, Vector2 playerPos) {
-        super(x, y, 32, 48); // 너가 사용하는 텍스처 크기에 맞게 조절 필요
+    public PatrolAI(float x, float y) {
+        super(x, y, 64, 64); // 너가 사용하는 텍스처 크기에 맞게 조절 필요
 
         MovementComponent movement = new MovementComponent(position, width, height);
         AnimationComponent animation = new AnimationComponent(
             "resources/chatgpt_character_walking_0001.png",
             "resources/chatgpt_character_walking_0002.png");
 
-        aiController = new PatrolAIController(movement, animation, walls, playerPos);
+        aiController = new PatrolAIController(movement, animation);
     }
-
+    @Override
+    public void updateMap(Array<Rectangle> walls, Vector2 playerPosition){
+        aiController.updateMap(walls, playerPosition);
+    }
     @Override
     public void update(float delta) {
         aiController.update(delta);
@@ -29,7 +32,6 @@ public class PatrolAI extends BaseEntity {
 
     @Override
     public void render(SpriteBatch batch) {
-
         try {
             aiController.render(batch);
         } catch (Exception e) {

@@ -12,14 +12,18 @@ public class PatrolAIController implements AIController {
     private boolean movingLeft = true;
     private boolean stopped = false;
 
-    private Array<Rectangle> walls;
-    private Vector2 playerPosition;
+    private Array<Rectangle> walls = new Array<Rectangle>();
+    private Vector2 playerPosition = new Vector2(0,0);
 
-    public PatrolAIController(MovementComponent movement, AnimationComponent animation,
-                              Array<Rectangle> walls, Vector2 playerPosition) {
+    public PatrolAIController(MovementComponent movement, AnimationComponent animation) {
         this.movement = movement;
         this.animation = animation;
-        this.walls = walls;
+    }
+
+    public void updateMap(Array<Rectangle> walls, Vector2 playerPosition){
+        for (Rectangle wall : walls) {
+            this.walls.add(wall);
+        }
         this.playerPosition = playerPosition;
     }
 

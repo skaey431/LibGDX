@@ -3,6 +3,7 @@ package LibGDX.TEST.entity;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 
 public abstract class BaseEntity {
 
@@ -18,6 +19,7 @@ public abstract class BaseEntity {
         this.hitbox = new Rectangle(x, y, width, height);
     }
 
+
     public Vector2 getPosition() {
         return position;
     }
@@ -29,6 +31,8 @@ public abstract class BaseEntity {
     protected void updateHitbox() {
         hitbox.setPosition(position.x, position.y);
     }
+
+    public abstract void updateMap(Array<Rectangle> walls, Vector2 playerPosition);
 
     public abstract void update(float delta);
 

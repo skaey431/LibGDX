@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ public class Main extends ApplicationAdapter {
     TestPopup popup;
 
     List<Stage> stages;
+    List<BaseEntity> entities;
     int currentStageIndex;
     Stage currentStage;
 
@@ -46,13 +48,13 @@ public class Main extends ApplicationAdapter {
     @Override
     public void create() {
         batch = new SpriteBatch();
-        brickTexture = new Texture(Gdx.files.internal("resources/bricks.png"));
-
         camera = new OrthographicCamera();
         camera.setToOrtho(false, worldWidth, worldHeight);
 
         stages = new ArrayList<>();
+        entities = new ArrayList<>();
 
+        //임시 db 넣기
         stages.add(new Stage(
             "room1",
             "resources/room1.png",
@@ -99,6 +101,14 @@ public class Main extends ApplicationAdapter {
             30,
             false
         ));
+        entities.add(
+            new PatrolAI(
+                50,50
+            )
+        );
+
+
+        //임시 데이터 끗
         currentStageIndex = 0;
         currentStage = stages.get(currentStageIndex);
 
@@ -175,8 +185,8 @@ public class Main extends ApplicationAdapter {
             miniMap.render(batch,player.getPosition());
         }
         for (BaseEntity entity : currentStage.getEntities()) {
+            entity.update(delta);
             entity.render(batch);
-            entity.check();
         }
 
         batch.end();
@@ -207,12 +217,21 @@ public class Main extends ApplicationAdapter {
         currentStage = stages.get(currentStageIndex);
 
         miniMap.update(currentStage.getWidth(), currentStage.getHeight());
+        System.out.println("stage moved");
 
 
         // 벽 갱신
         walls.clear();
         walls.addAll(currentStage.getWalls());
-        currentStage.makeEntity(new PatrolAI(100,50,currentStage.getWalls(),player.getPosition()));
+
+        for (BaseEntity entity : entities) {
+            try {
+                entity.updateMap(currentStage.getWalls(),player.getPosition());
+                currentStage.getEntities().add(entity);
+            }catch (Exception e){
+                System.out.println(e.getMessage());
+            }
+        }
 
 
 
