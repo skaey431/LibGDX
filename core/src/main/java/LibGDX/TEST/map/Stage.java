@@ -47,7 +47,7 @@ public class Stage {
     Texture backgroundTexture;
     float width, height;
     Array<Rectangle> walls;
-    ArrayList<BaseEntity> entities = new ArrayList<BaseEntity>();  // AI 정보 리스트 (ID, 타입, 위치 포함)
+    Array<BaseEntity> entities = new Array<BaseEntity>();  // AI 정보 리스트 (ID, 타입, 위치 포함)
     float x;
     float y;
     float size;
@@ -85,7 +85,7 @@ public class Stage {
         return backgroundTexture;
     }
 
-    public ArrayList<BaseEntity> getEntities() {
+    public Array<BaseEntity> getEntities() {
         return entities;
     }
 

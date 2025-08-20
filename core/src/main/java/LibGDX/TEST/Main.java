@@ -14,13 +14,10 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Main extends ApplicationAdapter {
     SpriteBatch batch;
@@ -28,7 +25,7 @@ public class Main extends ApplicationAdapter {
     Player player;
 
     Array<Rectangle> walls;
-    Texture brickTexture;
+    Texture wallTexture;
 
     float worldWidth = 800;
     float worldHeight = 480;
@@ -50,6 +47,9 @@ public class Main extends ApplicationAdapter {
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
         camera.setToOrtho(false, worldWidth, worldHeight);
+
+        wallTexture = new Texture("resources/bricks.png");
+
 
         stages = new ArrayList<>();
         entities = new ArrayList<>();
@@ -125,87 +125,84 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void render() {
-        float delta = Gdx.graphics.getDeltaTime();
+        try {
+            float delta = Gdx.graphics.getDeltaTime();
 
-        // M 키 눌림 감지해서 스테이지맵 토글
-        if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
-            isStageMapOpen = !isStageMapOpen;
-        }
-
-
-
-        if (!popup.isVisible()) {
-            player.update(delta, walls);
-        } else {
-            player.stopMoving();
-            player.update(delta, walls);
-        }
-
-
-        // 스테이지 이동 체크
-        if (player.getPosition().x > currentStage.getWidth()) {
-            moveToNextStage(true);
-        } else if (player.getPosition().x < 0) {
-            moveToNextStage(false);
-        }
-
-        // 카메라 위치 조정
-        camera.position.x = player.getPosition().x + worldWidth / 8;
-        camera.position.y = player.getPosition().y + worldHeight / 4;
-
-        camera.position.x = Math.max(camera.position.x, worldWidth / 2);
-        camera.position.x = Math.min(camera.position.x, currentStage.getWidth() - worldWidth / 2);
-        camera.position.y = Math.max(camera.position.y, worldHeight / 2);
-
-        camera.update();
-
-        // 화면 클리어
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-
-        // 배경 그리기
-        batch.draw(currentStage.getBackgroundTexture(), 0, 0, currentStage.getWidth(), currentStage.getHeight());
-
-        // 벽 그리기
-        for (Rectangle wall : walls) {
-            batch.draw(brickTexture, wall.x, wall.y, wall.width, wall.height);
-        }
+            // M 키 눌림 감지해서 스테이지맵 토글
+            if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
+                isStageMapOpen = !isStageMapOpen;
+            }
 
 
 
-        // 플레이어, 팝업 텍스트 렌더링
-        player.render(batch);
-        popup.renderText(batch);
-
-        // 미니맵은 스테이지맵이 열리지 않았을 때만 그린다
-        if (!isStageMapOpen) {
-            miniMap.render(batch,player.getPosition());
-        }
-        for (BaseEntity entity : currentStage.getEntities()) {
-            entity.update(delta);
-            entity.render(batch);
-        }
-
-        batch.end();
+            if (!popup.isVisible()) {
+                player.update(delta, walls);
+            } else {
+                player.stopMoving();
+                player.update(delta, walls);
+            }
 
 
-        // 팝업 도형 렌더링
-        popup.renderShape();
+            // 스테이지 이동 체크
+            if (player.getPosition().x > currentStage.getWidth()) {
+                moveToNextStage(true);
+            } else if (player.getPosition().x < 0) {
+                moveToNextStage(false);
+            }
+
+            // 카메라 위치 조정
+            camera.position.x = player.getPosition().x + worldWidth / 8;
+            camera.position.y = player.getPosition().y + worldHeight / 4;
+
+            camera.position.x = Math.max(camera.position.x, worldWidth / 2);
+            camera.position.x = Math.min(camera.position.x, currentStage.getWidth() - worldWidth / 2);
+            camera.position.y = Math.max(camera.position.y, worldHeight / 2);
+
+            camera.update();
+
+            // 화면 클리어
+            Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
+            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+            batch.setProjectionMatrix(camera.combined);
+
+            batch.begin();
+            // 배경 그리기
+            batch.draw(currentStage.getBackgroundTexture(), 0, 0, currentStage.getWidth(), currentStage.getHeight());
+
+            // 벽 그리기
+            for (Rectangle wall : walls) {
+                batch.draw(wallTexture, wall.x, wall.y, wall.width, wall.height);
+            }
 
 
 
-        // 스테이지맵은 열려 있을 때만 그린다
-        if (isStageMapOpen) {
-            stageMap.render(currentStageIndex);
-        }
+            // 플레이어, 팝업 텍스트 렌더링
+            player.render(batch);
 
-        if (Gdx.input.justTouched()) {
-            int screenX = Gdx.input.getX();
-            int screenY = Gdx.graphics.getHeight() - Gdx.input.getY();
-            popup.handleClick(screenX, screenY);
+            // 미니맵은 스테이지맵이 열리지 않았을 때만 그린다
+            if (!isStageMapOpen) {
+                try {
+                    miniMap.render(batch,player.getPosition(),currentStage.getEntities());
+
+                }catch (Exception e){
+                    System.out.println(e.getMessage());
+                }
+            }
+
+            for (BaseEntity entity : currentStage.getEntities()) {
+                entity.update(delta);
+                entity.render(batch);
+            }
+
+            batch.end();
+
+            // 스테이지맵은 열려 있을 때만 그린다
+            if (isStageMapOpen) {
+                stageMap.render(currentStageIndex);
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -246,7 +243,7 @@ public class Main extends ApplicationAdapter {
     @Override
     public void dispose() {
         batch.dispose();
-        brickTexture.dispose();
+        wallTexture.dispose();
 
         for (Stage s : stages) s.dispose();
         for (BaseEntity entity : currentStage.getEntities()) {

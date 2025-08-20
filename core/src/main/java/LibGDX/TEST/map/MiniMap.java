@@ -1,11 +1,13 @@
 package LibGDX.TEST.map;
 
+import LibGDX.TEST.entity.BaseEntity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 
 public class MiniMap {
     private ShapeRenderer shapeRenderer;
@@ -28,7 +30,7 @@ public class MiniMap {
 
     }
 
-    public void render(SpriteBatch batch, Vector2 playerPos) {
+    public void render(SpriteBatch batch, Vector2 playerPos, Array<BaseEntity> entities) {
         batch.end();
         Gdx.gl.glEnable(GL20.GL_BLEND);
         shapeRenderer.setProjectionMatrix(camera.combined);
@@ -55,7 +57,7 @@ public class MiniMap {
             // 좌측 끝: 플레이어 점 이동
             dotX = mapX + scaledX;
             offsetX = 0;
-        } else if ( scaledX - mapWidth <(backgroundWidth/800 - 1) * mapWidth/ 2f - mapWidth / 2f   )  {
+        } else if ( scaledX - mapWidth <(backgroundWidth/800 - 1) * mapWidth/ 2f)  {
             dotX = mapX + mapWidth / 2f;
 
         } else {
@@ -64,13 +66,21 @@ public class MiniMap {
             offsetX = ((backgroundWidth/800 - 1) * mapWidth/ 2f);
         }
 
+
         float dotY = mapY + scaledY; // 세로는 단순 비율
 
         // 4️⃣ 플레이어 점 표시
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(1, 0, 0, 1);
         shapeRenderer.circle(dotX - offsetX, dotY, 3);
+        for (BaseEntity entity : entities) {
+            float relativePos =  playerPos.x - entity.getPosition().x;
+            relativePos = relativePos/800 * mapWidth;
+            shapeRenderer.setColor(0, 0, 1, 1);
+            shapeRenderer.circle(dotX - offsetX - relativePos, mapY + entity.getPosition().y/backgroundHeight*mapHeight, 3);
+        }
         shapeRenderer.end();
+
 
         Gdx.gl.glDisable(GL20.GL_BLEND);
         batch.begin();
