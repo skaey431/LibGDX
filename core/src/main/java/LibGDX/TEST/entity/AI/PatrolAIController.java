@@ -20,11 +20,10 @@ public class PatrolAIController implements AIController {
         this.animation = animation;
     }
 
-    public void updateMap(Array<Rectangle> walls, Vector2 playerPosition){
+    public void updateMap(Array<Rectangle> walls){
         for (Rectangle wall : walls) {
             this.walls.add(wall);
         }
-        this.playerPosition = playerPosition;
     }
 
     @Override

@@ -32,7 +32,7 @@ public abstract class BaseEntity {
         hitbox.setPosition(position.x, position.y);
     }
 
-    public abstract void updateMap(Array<Rectangle> walls, Vector2 playerPosition);
+    public abstract void updateMap(Array<Rectangle> walls);
 
     public abstract void update(float delta);
 

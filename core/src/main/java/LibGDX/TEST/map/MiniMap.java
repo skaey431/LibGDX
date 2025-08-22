@@ -57,7 +57,7 @@ public class MiniMap {
             // 좌측 끝: 플레이어 점 이동
             dotX = mapX + scaledX;
             offsetX = 0;
-        } else if ( scaledX - mapWidth <(backgroundWidth/800 - 1) * mapWidth/ 2f)  {
+        } else if ( mapWidth - scaledX <(backgroundWidth/800 - 0.5) * mapWidth)  {
             dotX = mapX + mapWidth / 2f;
 
         } else {

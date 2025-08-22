@@ -1,5 +1,9 @@
 package LibGDX.TEST;
 
+import LibGDX.TEST.controller.CameraController;
+import LibGDX.TEST.controller.EntityManager;
+import LibGDX.TEST.controller.StageManager;
+import LibGDX.TEST.controller.UIManager;
 import LibGDX.TEST.entity.AI.PatrolAI;
 import LibGDX.TEST.entity.BaseEntity;
 import LibGDX.TEST.entity.Player;
@@ -20,107 +24,65 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main extends ApplicationAdapter {
-    SpriteBatch batch;
-    OrthographicCamera camera;
-    Player player;
 
-    Array<Rectangle> walls;
-    Texture wallTexture;
+    private static final float WORLD_WIDTH = 800;
+    private static final float WORLD_HEIGHT = 480;
+    private static final float PLAYER_START_Y = 40;
 
-    float worldWidth = 800;
-    float worldHeight = 480;
+    private SpriteBatch batch;
+    private OrthographicCamera camera;
+    private OrthographicCamera uiCamera;
+    private CameraController cameraController;
 
-    TestPopup popup;
+    private Player player;
+    private Texture wallTexture;
 
-    List<Stage> stages;
-    List<BaseEntity> entities;
-    int currentStageIndex;
-    Stage currentStage;
+    private StageManager stageManager;
+    private EntityManager entityManager;
 
-    MiniMap miniMap;       // 미니맵 객체
-    StageMap stageMap;     // 스테이지맵 객체
-
-    boolean isStageMapOpen = false;  // 스테이지맵 열림 상태
+    private MiniMap miniMap;
+    private StageMap stageMap;
+    private UIManager uiManager;
 
     @Override
     public void create() {
         batch = new SpriteBatch();
+
+        // 카메라 설정
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, worldWidth, worldHeight);
+        camera.setToOrtho(false, WORLD_WIDTH, WORLD_HEIGHT);
+        cameraController = new CameraController(camera, WORLD_WIDTH, WORLD_HEIGHT);
+
+        uiCamera = new OrthographicCamera();
+        uiCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         wallTexture = new Texture("resources/bricks.png");
 
+        // 스테이지 생성
+        List<Stage> stages = new ArrayList<>();
+        stages.add(new Stage("room1", "resources/room1.png",
+            new Array<Rectangle>() {{ add(new Rectangle(0, 40, 800, 20)); }},
+            0, 0, 50, true));
+        stages.add(new Stage("hallway1-2", "resources/hallway.png",
+            new Array<Rectangle>() {{ add(new Rectangle(0, 40, 1000, 20)); }},
+            50, 10, 30, true));
+        stages.add(new Stage("room2", "resources/room2.png",
+            new Array<Rectangle>() {{ add(new Rectangle(0, 40, 800, 20)); }},
+            50 + (float)4096 / 16, 0, 50, true));
 
-        stages = new ArrayList<>();
-        entities = new ArrayList<>();
+        stageManager = new StageManager(stages);
 
-        //임시 db 넣기
-        stages.add(new Stage(
-            "room1",
-            "resources/room1.png",
-            new Array<Rectangle>() {{
-                add(new Rectangle(0, 40, 800, 0));
-            }},
-            0,
-            0,
-            50,
-            true
-        ));
+        // 플레이어 생성
+        player = new Player(100, PLAYER_START_Y);
 
-        stages.add(new Stage(
-            "hallway1-2",
-            "resources/hallway.png",
-            new Array<Rectangle>() {{
-                add(new Rectangle(0, 40, 1000, 0));
-            }},
-            50,
-            10,
-            30,
-            true
-        ));
+        // 엔티티 생성
+        entityManager = new EntityManager();
+        entityManager.addEntity(new PatrolAI(50, 50));
 
-        stages.add(new Stage(
-            "room2",
-            "resources/room2.png",
-            new Array<Rectangle>() {{
-                add(new Rectangle(0, 40, 800, 0));
-            }},
-            50+4096/16,
-            0,
-            50,
-            true
-        ));
-        stages.add(new Stage(
-            "hallway1-2",
-            "resources/hallway.png",
-            new Array<Rectangle>() {{
-                add(new Rectangle(0, 40, 0, 0));
-            }},
-            10,
-            50,
-            30,
-            false
-        ));
-        entities.add(
-            new PatrolAI(
-                50,50
-            )
-        );
-
-
-        //임시 데이터 끗
-        currentStageIndex = 0;
-        currentStage = stages.get(currentStageIndex);
-
-        player = new Player(100, 40);
-
-        walls = new Array<>();
-        walls.addAll(currentStage.getWalls());
-
-        popup = new TestPopup(200, 150);
-
-        miniMap = new MiniMap(camera, currentStage.getBackgroundTexture().getHeight(), currentStage.getBackgroundTexture().getWidth());  // 미니맵 생성
-        stageMap = new StageMap(stages);        // 스테이지맵 생성
+        // 미니맵, 스테이지맵, UI
+        miniMap = new MiniMap(camera, stageManager.getCurrentStage().getHeight(), stageManager.getCurrentStage().getWidth());
+        stageMap = new StageMap(stages);
+        uiManager = new UIManager(uiCamera, stageMap, miniMap);
     }
 
     @Override
@@ -128,115 +90,62 @@ public class Main extends ApplicationAdapter {
         try {
             float delta = Gdx.graphics.getDeltaTime();
 
-            // M 키 눌림 감지해서 스테이지맵 토글
-            if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
-                isStageMapOpen = !isStageMapOpen;
-            }
+            // 스테이지맵 토글
+            if (Gdx.input.isKeyJustPressed(Input.Keys.M)) uiManager.toggleStageMap();
 
+            // 플레이어 물리 업데이트
+            player.update(delta, stageManager.getCurrentStage().getWalls());
 
-
-            if (!popup.isVisible()) {
-                player.update(delta, walls);
-            } else {
-                player.stopMoving();
-                player.update(delta, walls);
-            }
-
+            // 엔티티 업데이트
+            entityManager.updateEntities(delta, stageManager.getCurrentStage());
 
             // 스테이지 이동 체크
-            if (player.getPosition().x > currentStage.getWidth()) {
-                moveToNextStage(true);
-            } else if (player.getPosition().x < 0) {
-                moveToNextStage(false);
-            }
+            checkStageTransition();
 
-            // 카메라 위치 조정
-            camera.position.x = player.getPosition().x + worldWidth / 8;
-            camera.position.y = player.getPosition().y + worldHeight / 4;
-
-            camera.position.x = Math.max(camera.position.x, worldWidth / 2);
-            camera.position.x = Math.min(camera.position.x, currentStage.getWidth() - worldWidth / 2);
-            camera.position.y = Math.max(camera.position.y, worldHeight / 2);
-
-            camera.update();
+            // 카메라 업데이트
+            cameraController.update(player.getPosition(), stageManager.getCurrentStage());
 
             // 화면 클리어
             Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+            // 월드 렌더
             batch.setProjectionMatrix(camera.combined);
-
             batch.begin();
-            // 배경 그리기
-            batch.draw(currentStage.getBackgroundTexture(), 0, 0, currentStage.getWidth(), currentStage.getHeight());
 
-            // 벽 그리기
-            for (Rectangle wall : walls) {
+            // 배경
+            batch.draw(stageManager.getCurrentStage().getBackgroundTexture(), 0, 0,
+                stageManager.getCurrentStage().getWidth(),
+                stageManager.getCurrentStage().getHeight());
+
+            // 벽
+            for (Rectangle wall : stageManager.getCurrentStage().getWalls()) {
                 batch.draw(wallTexture, wall.x, wall.y, wall.width, wall.height);
             }
 
-
-
-            // 플레이어, 팝업 텍스트 렌더링
+            // 플레이어
             player.render(batch);
 
-            // 미니맵은 스테이지맵이 열리지 않았을 때만 그린다
-            if (!isStageMapOpen) {
-                try {
-                    miniMap.render(batch,player.getPosition(),currentStage.getEntities());
-
-                }catch (Exception e){
-                    System.out.println(e.getMessage());
-                }
-            }
-
-            for (BaseEntity entity : currentStage.getEntities()) {
-                entity.update(delta);
-                entity.render(batch);
-            }
+            // 엔티티 렌더
+            entityManager.renderEntities(batch, stageManager.getCurrentStage());
 
             batch.end();
 
-            // 스테이지맵은 열려 있을 때만 그린다
-            if (isStageMapOpen) {
-                stageMap.render(currentStageIndex);
-            }
+            // UI 렌더
+            uiManager.render(batch, uiCamera, player,
+                stageManager.getCurrentStage().getEntities(),
+                stageManager.getCurrentIndex());
+
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    private void moveToNextStage(boolean toRight) {
-        int nextIndex = currentStageIndex + (toRight ? 1 : -1);
-        if (nextIndex < 0 || nextIndex >= stages.size()) return;
-
-        currentStageIndex = nextIndex;
-        currentStage = stages.get(currentStageIndex);
-
-        miniMap.update(currentStage.getWidth(), currentStage.getHeight());
-        System.out.println("stage moved");
-
-
-        // 벽 갱신
-        walls.clear();
-        walls.addAll(currentStage.getWalls());
-
-        for (BaseEntity entity : entities) {
-            try {
-                entity.updateMap(currentStage.getWalls(),player.getPosition());
-                currentStage.getEntities().add(entity);
-            }catch (Exception e){
-                System.out.println(e.getMessage());
-            }
-        }
-
-
-
-        // 플레이어 위치 재설정
-        if (toRight) {
-            player.setPosition(0, 40);
-        } else {
-            player.setPosition(currentStage.getWidth() - 10, 40);
+    private void checkStageTransition() {
+        if (player.getPosition().x > stageManager.getCurrentStage().getWidth()) {
+            stageManager.moveToNextStage(true);
+        } else if (player.getPosition().x < 0) {
+            stageManager.moveToNextStage(false);
         }
     }
 
@@ -244,13 +153,8 @@ public class Main extends ApplicationAdapter {
     public void dispose() {
         batch.dispose();
         wallTexture.dispose();
-
-        for (Stage s : stages) s.dispose();
-        for (BaseEntity entity : currentStage.getEntities()) {
-            entity.dispose();
-        }
-
         player.dispose();
-        popup.dispose();
+        for (BaseEntity entity : stageManager.getCurrentStage().getEntities()) entity.dispose();
+        entityManager.disposeAll();
     }
 }

@@ -20,8 +20,8 @@ public class PatrolAI extends BaseEntity {
         aiController = new PatrolAIController(movement, animation);
     }
     @Override
-    public void updateMap(Array<Rectangle> walls, Vector2 playerPosition){
-        aiController.updateMap(walls, playerPosition);
+    public void updateMap(Array<Rectangle> walls){
+        aiController.updateMap(walls);
     }
     @Override
     public void update(float delta) {
