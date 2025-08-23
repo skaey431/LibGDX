@@ -1,4 +1,4 @@
-package LibGDX.TEST.entity;
+package LibGDX.TEST.entity.abstracClass;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
@@ -39,5 +39,4 @@ public abstract class BaseEntity {
     public abstract void render(SpriteBatch batch);
 
     public abstract void dispose();
-    public abstract void check();
 }

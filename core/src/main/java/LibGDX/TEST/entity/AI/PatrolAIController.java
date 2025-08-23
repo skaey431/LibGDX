@@ -18,6 +18,7 @@ public class PatrolAIController implements AIController {
     public PatrolAIController(MovementComponent movement, AnimationComponent animation) {
         this.movement = movement;
         this.animation = animation;
+        movement.setVelocityX(-100f);
     }
 
     public void updateMap(Array<Rectangle> walls){
@@ -28,21 +29,7 @@ public class PatrolAIController implements AIController {
 
     @Override
     public void update(float delta) {
-        float dx = movement.getPosition().x - playerPosition.x;
-        float dy = movement.getPosition().y - playerPosition.y;
-        float dist = (float) Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < 100) {
-            movement.stopX();
-            stopped = true;
-        } else {
-            float speed = movement.getMoveSpeed();
-            movement.setVelocityX(movingLeft ? -speed : speed);
-            stopped = false;
-        }
-
         Vector2 oldPos = movement.getPosition().cpy();
-
         movement.update(delta, walls);
 
         // 충돌 판단 (좌우 충돌 시 방향 전환)

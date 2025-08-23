@@ -5,7 +5,8 @@ import LibGDX.TEST.controller.EntityManager;
 import LibGDX.TEST.controller.StageManager;
 import LibGDX.TEST.controller.UIManager;
 import LibGDX.TEST.entity.AI.PatrolAI;
-import LibGDX.TEST.entity.BaseEntity;
+import LibGDX.TEST.entity.abstracClass.BaseCharacter;
+import LibGDX.TEST.entity.abstracClass.BaseEntity;
 import LibGDX.TEST.entity.Player;
 import LibGDX.TEST.map.MiniMap;
 import LibGDX.TEST.map.Stage;
@@ -61,7 +62,7 @@ public class Main extends ApplicationAdapter {
         // 스테이지 생성
         List<Stage> stages = new ArrayList<>();
         stages.add(new Stage("room1", "resources/room1.png",
-            new Array<Rectangle>() {{ add(new Rectangle(0, 40, 800, 20)); }},
+            new Array<Rectangle>() {{ add(new Rectangle(0, 40, 800, 20)); add(new Rectangle(0, 40, 40, 200)); }},
             0, 0, 50, true));
         stages.add(new Stage("hallway1-2", "resources/hallway.png",
             new Array<Rectangle>() {{ add(new Rectangle(0, 40, 1000, 20)); }},
@@ -95,10 +96,8 @@ public class Main extends ApplicationAdapter {
 
             // 플레이어 물리 업데이트
             player.update(delta, stageManager.getCurrentStage().getWalls());
-
             // 엔티티 업데이트
             entityManager.updateEntities(delta, stageManager.getCurrentStage());
-
             // 스테이지 이동 체크
             checkStageTransition();
 
@@ -125,7 +124,6 @@ public class Main extends ApplicationAdapter {
 
             // 플레이어
             player.render(batch);
-
             // 엔티티 렌더
             entityManager.renderEntities(batch, stageManager.getCurrentStage());
 
@@ -143,10 +141,24 @@ public class Main extends ApplicationAdapter {
 
     private void checkStageTransition() {
         if (player.getPosition().x > stageManager.getCurrentStage().getWidth()) {
-            stageManager.moveToNextStage(true);
+            stageManager.moveToNextStage(true,player);
+            stageManager.setCurrentStage(player.getCurrentStage());
+            System.out.println(stageManager.getCurrentStage());
+            for (BaseEntity entity : entityManager.getEntitiesInStage(stageManager.getCurrentStage())) {
+                stageManager.updateEntity(entity);
+            }
         } else if (player.getPosition().x < 0) {
-            stageManager.moveToNextStage(false);
+            stageManager.moveToNextStage(false,player);
+            stageManager.setCurrentStage(player.getCurrentStage());
         }
+        for (BaseEntity entity : stageManager.getCurrentStage().getEntities()){
+            if (entity.getPosition().x > stageManager.getCurrentStage().getWidth()) {
+                stageManager.moveToNextStage(true,(BaseCharacter) entity);
+            }else if (entity.getPosition().x < 0){
+                stageManager.moveToNextStage(false,(BaseCharacter) entity);
+            }
+        }
+
     }
 
     @Override

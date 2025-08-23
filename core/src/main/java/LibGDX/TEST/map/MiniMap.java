@@ -1,6 +1,6 @@
 package LibGDX.TEST.map;
 
-import LibGDX.TEST.entity.BaseEntity;
+import LibGDX.TEST.entity.abstracClass.BaseEntity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;

@@ -1,16 +1,16 @@
 package LibGDX.TEST.entity;
 
-import LibGDX.TEST.entity.BaseEntity;
+import LibGDX.TEST.entity.abstracClass.BaseCharacter;
+import LibGDX.TEST.entity.abstracClass.BaseEntity;
 import LibGDX.TEST.entity.AI.MovementComponent;
 import LibGDX.TEST.entity.AI.AnimationComponent;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 
-public class Player extends BaseEntity {
+public class Player extends BaseCharacter {
     private MovementComponent movement;
     private AnimationComponent animation;
 
@@ -31,7 +31,7 @@ public class Player extends BaseEntity {
         handleInput();
         movement.update(delta, walls);
         animation.update(delta, movement.getVelocityX() != 0);
-
+        System.out.println("movement: " + movement.getVelocityX());
         this.position.set(movement.getPosition());
         updateHitbox();
     }
@@ -71,10 +71,21 @@ public class Player extends BaseEntity {
     public void stopMoving() {
         animation.setShowFrame1(true);
     }
+    @Override
     public void setPosition(float x, float y) {
         position.set(x, y);
         movement.getPosition().set(position);
     }
+
     @Override
-    public void check(){};
+    public void setCurrentStage(int stage) {
+        this.currentStage = stage;
+    }
+
+    @Override
+    public int getCurrentStage() {
+        return currentStage;
+    }
+
+    ;
 }

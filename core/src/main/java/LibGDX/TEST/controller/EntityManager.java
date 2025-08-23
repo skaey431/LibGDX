@@ -1,6 +1,6 @@
 package LibGDX.TEST.controller;
 
-import LibGDX.TEST.entity.BaseEntity;
+import LibGDX.TEST.entity.abstracClass.BaseEntity;
 import LibGDX.TEST.map.Stage;
 
 import java.util.ArrayList;
@@ -22,7 +22,10 @@ public class EntityManager {
     }
 
     public void updateEntities(float delta, Stage stage){
-        getEntitiesInStage(stage).forEach(e -> e.updateMap(stage.getWalls()));
+        for (BaseEntity entity : stage.getEntities()) {
+            entity.updateMap(stage.getWalls());
+            entity.update(delta);
+        }
     }
 
     public void renderEntities(com.badlogic.gdx.graphics.g2d.SpriteBatch batch, Stage stage){

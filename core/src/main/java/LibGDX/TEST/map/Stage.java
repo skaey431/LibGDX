@@ -1,13 +1,11 @@
 package LibGDX.TEST.map;
 
-import LibGDX.TEST.entity.BaseEntity;
+import LibGDX.TEST.entity.abstracClass.BaseEntity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-
-import java.util.ArrayList;
 
 public class Stage {
     public float getWidth() {

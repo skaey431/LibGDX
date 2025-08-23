@@ -1,6 +1,6 @@
 package LibGDX.TEST.controller;
 
-import LibGDX.TEST.entity.BaseEntity;
+import LibGDX.TEST.entity.abstracClass.BaseEntity;
 import LibGDX.TEST.map.MiniMap;
 import LibGDX.TEST.map.StageMap;
 import com.badlogic.gdx.graphics.OrthographicCamera;
