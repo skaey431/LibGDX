@@ -32,6 +32,8 @@ public class StageManager {
         // 플레이어 재배치
         if(toRight) character.setPosition(0, character.getPosition().y);
         else character.setPosition(stages.get(character.getCurrentStage()).getWidth(), character.getPosition().y);
+        System.out.println(stages.get(character.getCurrentStage()).getWidth());
+
     }
 
 

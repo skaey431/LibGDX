@@ -2,23 +2,24 @@ package LibGDX.TEST.controller;
 
 import LibGDX.TEST.entity.abstracClass.BaseEntity;
 import LibGDX.TEST.map.Stage;
+import com.badlogic.gdx.utils.Array;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class EntityManager {
-    private final List<BaseEntity> allEntities;
+    private final Array<BaseEntity> allEntities;
 
     public EntityManager() {
-        this.allEntities = new ArrayList<>();
+        this.allEntities = new Array<>();
     }
 
     public void addEntity(BaseEntity entity){
         allEntities.add(entity);
     }
 
-    public List<BaseEntity> getEntitiesInStage(Stage stage){
-        return allEntities;
+    public Array<BaseEntity> getEntitiesInStage(Stage stage){
+        return stage.getEntities();
     }
 
     public void updateEntities(float delta, Stage stage){
@@ -27,6 +28,7 @@ public class EntityManager {
             entity.update(delta);
         }
     }
+    
 
     public void renderEntities(com.badlogic.gdx.graphics.g2d.SpriteBatch batch, Stage stage){
         getEntitiesInStage(stage).forEach(e -> e.render(batch));
